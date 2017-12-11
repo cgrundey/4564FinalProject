@@ -15,6 +15,8 @@ signal.signal(signal.SIGINT, end_read)
 
 MIFAREReader = MFRC522.MFRC522()
 
+colin = raw_input("Enter data: ")
+
 while continue_reading:
 
     (status,TagType) = MIFAREReader.MFRC522_Request(MIFAREReader.PICC_REQIDL)
@@ -35,40 +37,11 @@ while continue_reading:
         print("\n")
         # Check if authenticated
         if status == MIFAREReader.MI_OK:
-            # Variable for the data to write
-            data = []
-            # Fill the data with 0xFF
-            for x in range(0,16):
-                data.append(0xFF)
-            print("Sector 8 looked like this:")
-            # Read block 8
+            print("Before: ")
             MIFAREReader.MFRC522_Read(8)
-            print("\n")
-
-            print("Sector 8 will now be filled with 0xFF:")
-            # Write the data
-            MIFAREReader.MFRC522_Write(8, data)
-            print("\n")
-
-            print("It now looks like this:")
-            # Check to see if it was written
+            MIFAREReader.MFRC522_Write(8, colin)
+            print("After: ")
             MIFAREReader.MFRC522_Read(8)
-            print("\n")
-
-            data = []
-            # Fill the data with 0x00
-            for x in range(0,16):
-                data.append(0x00)
-
-            print("Now we fill it with 0x00:")
-            MIFAREReader.MFRC522_Write(8, data)
-            print("\n")
-
-            print("It is now empty:")
-            # Check to see if it was written
-            MIFAREReader.MFRC522_Read(8)
-            print("\n")
-
             # Stop
             MIFAREReader.MFRC522_StopCrypto1()
 
