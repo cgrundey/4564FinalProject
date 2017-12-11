@@ -37,9 +37,12 @@ while continue_reading:
         print("\n")
         # Check if authenticated
         if status == MIFAREReader.MI_OK:
+            data = []
+            for i in range (0,16):
+                data.append(0x01 + i)
             print("Before: ")
             MIFAREReader.MFRC522_Read(8)
-            MIFAREReader.MFRC522_Write(8, colin.split(","))
+            MIFAREReader.MFRC522_Write(8, data)
             print("After: ")
             MIFAREReader.MFRC522_Read(8)
             # Stop
