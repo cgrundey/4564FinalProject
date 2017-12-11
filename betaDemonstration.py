@@ -27,6 +27,7 @@ while continue_reading:
             break
         else:
             print("User not authorized")
+            continue
         # This is the default key for authentication
         key = [0xFF,0xFF,0xFF,0xFF,0xFF,0xFF]
         MIFAREReader.MFRC522_SelectTag(uid)
