@@ -49,7 +49,7 @@ for locker in lockers.find():
 				routing_key=locker['lockerID'])
 
 # message = json.dumps(data)
-def callback(ch, method, properties, body):
+def master_callback(ch, method, properties, body):
 	data = json.loads(body)
 	if data['lockerID'] == method.routing_key: # should always be true
 		the_user = users.find( {'lockerID':data['lockerID']} )
@@ -59,6 +59,13 @@ def callback(ch, method, properties, body):
 		else:
 			# publish failure back to rabbitExchange with method.routing_key
 
-channel.basic_consume(callback, queue="masterQ", no_ack=True)
+for locker in lockers.find():
+	def (ch)
+
+channel.basic_consume(master_callback, queue="masterQ", no_ack=True)
+for locker in lockers.find():
+	
+	channel.basic_consume(, queue=locker['lockerID'], no_ack=True)
+
 channel.start_consuming()
 
