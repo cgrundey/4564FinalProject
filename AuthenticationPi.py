@@ -15,10 +15,10 @@ history = db.history
 lockers = db.lockers
 
 # RabbitMQ initialization
-rabbitUname = 
-rabbitPword = 
-rabbitVhost = 
-rabbitExchange = 
+rabbitUname = 'Apple'
+rabbitPword = 'Pie'
+rabbitVhost = 'team_13_host'
+rabbitExchange = 'team_13'
 try:
 	credentials = pika.PlainCredentials(rabbitUname, rabbitPword)
 	parameters = pika.ConnectionParameters('localhost', 5672, rabbitVhost, credentials)

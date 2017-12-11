@@ -9,6 +9,14 @@ import RPi.GPIO as GPIO
 import MFRC522
 import signal
 
+#RabbitMQ
+credentials = pika.PlainCredentials('Apple', 'Pie')
+parameters = pika.ConnectionParameters(sys.argv[1], virtual_host='team_13_host', credentials=credentials)
+connection = pika.BlockingConnection(parameters)
+channel = connection.channel()
+
+
+
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
 
