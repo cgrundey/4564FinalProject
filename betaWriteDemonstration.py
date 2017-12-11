@@ -39,7 +39,7 @@ while continue_reading:
         if status == MIFAREReader.MI_OK:
             print("Before: ")
             MIFAREReader.MFRC522_Read(8)
-            MIFAREReader.MFRC522_Write(colin)
+            MIFAREReader.MFRC522_Write(8, colin.split(","))
             print("After: ")
             MIFAREReader.MFRC522_Read(8)
             # Stop
