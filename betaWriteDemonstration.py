@@ -15,8 +15,6 @@ signal.signal(signal.SIGINT, end_read)
 
 MIFAREReader = MFRC522.MFRC522()
 
-colin = raw_input("Enter data: ")
-
 while continue_reading:
 
     (status,TagType) = MIFAREReader.MFRC522_Request(MIFAREReader.PICC_REQIDL)
