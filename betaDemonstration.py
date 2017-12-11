@@ -7,7 +7,7 @@ continue_reading = True
 
 def end_read(signal,frame):
     global continue_reading
-    print()"Ending...")
+    print("Ending...")
     continue_reading = False
     GPIO.cleanup()
 
