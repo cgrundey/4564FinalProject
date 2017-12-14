@@ -48,7 +48,7 @@ while continue_reading:
         uid = str(uid[0])+str(uid[1])+str(uid[2])+str(uid[3])
         print("Authorizing UID: " + uid + " ...")
         # output status to led
-        if uid[0] == 126:
+        if uid == '126227175133':
             # success
             RED.ChangeDutyCycle(0)
             GREEN.ChangeDutyCycle(100)
