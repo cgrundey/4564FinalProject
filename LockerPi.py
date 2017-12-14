@@ -6,12 +6,12 @@ import MFRC522
 import signal
 import pika
 
-GPIO.setmode(GPIO.BCM)
-GPIO.setwarnings(false)
+GPIO.setmode(GPIO.BOARD)
+GPIO.setwarnings(False)
 
-red = 4
-green = 18
-blue = 23
+red = 11
+green = 13
+blue = 15
 
 GPIO.setup(red, GPIO.OUT)
 GPIO.setup(green, GPIO.OUT)
@@ -22,9 +22,9 @@ RED = GPIO.PWM(red, Freq)
 GREEN = GPIO.PWM(green, Freq)
 BLUE = GPIO.PWM(blue, Freq)
 
-RED.start(100)
-GREEN.start(100)
-BLUE.start(100)
+RED.start(0)
+GREEN.start(0)
+BLUE.start(0)
 
 "get this from RFID sensor"
 lockerID = ''
