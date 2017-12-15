@@ -2,6 +2,12 @@ import sys
 from pymongo import *
 import pika
 import json
+from flask import make_response, request, Response, abort, Flask, jsonify
+from flask_discoverer import Discoverer, advertise
+
+#flask initialization
+app = Flask(__name__)
+discoverer = Discoverer(app)
 
 # MongoDB initialization
 try:
@@ -54,7 +60,7 @@ def master_callback(ch, method, properties, body):
 	if data['lockerID'] == method.routing_key: # should always be true
 		the_user = users.find( {'lockerID':data['lockerID']} )
 		# Check if user exists with specified lockerID
-		if the_user['username'] == data['username'] && the_user['password'] == data['password']:
+		if the_user['username'] == data['username'] and the_user['password'] == data['password']:
 			# publish success back to rabbitExchange with method.routing_key
 		else:
 			# publish failure back to rabbitExchange with method.routing_key
@@ -68,4 +74,62 @@ for locker in lockers.find():
 	channel.basic_consume(, queue=locker['lockerID'], no_ack=True)
 
 channel.start_consuming()
+
+'''
+------------------------------Flask section-------------------------------------
+'''
+
+def check_auth(username, password):
+	"""
+	This function is called to check if a username /
+	password combination is valid.
+	"""
+	return True if username == "Apple" and password == "Pie" else False
+	
+def authenticate():
+	"""Sends a 401 response that enables basic auth"""
+	return Response(
+	'Could not verify your access level for that URL.\n'
+	'You have to login with proper credentials', 401,
+	{'WWW-Authenticate': 'Basic realm="Login Required"'})
+
+def requires_auth(f):
+	@wraps(f)
+	def decorated(*args, **kwargs):
+		auth = request.authorization
+		if not auth or not check_auth(auth.username, auth.password):
+			return authenticate()
+		return f(*args, **kwargs)
+	return decorated
+	
+@app.route("/add_tag_user", methods =['POST'])
+@requires_auth
+def add_tag_user():
+	usr = request.get_json()['user']
+	tag = request.get_json()['tag']
+	print("usr: {}tag: {}".format(usr, tag))
+	#add tag to user here
+
+@app.route("/remove_tag_user", methods =['DELETE'])
+@requires_auth
+def remove_tag_user():
+	usr = request.get_json()['user']
+	tag = request.get_json()['tag']
+	#remove tag from user here
+	
+@app.route("/add_locker_user", methods =['POST'])
+@advertise()
+@requires_auth
+def add_locker_user():
+	usr = request.get_json()['user']
+	lock = request.get_json()['locker']
+	#add locker to user here
+
+@app.route("/remove_locker_user", methods =['DELETE'])
+@advertise()
+@requires_auth
+def remove_locker_user():
+	usr = request.get_json()['user']
+	lock = request.get_json()['locker']
+	#remove locker from user here
 
