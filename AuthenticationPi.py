@@ -12,8 +12,6 @@ try:
 except:
 	sys.exit("Error connecting to MongoDB")
 # Collections
-credentials = db.users
-history = db.history
 lockers = db.lockers
 
 # RabbitMQ initialization
@@ -36,7 +34,7 @@ channel.queue_purge(queue="masterQ")
 # Create queue for each locker to post
 for locker in lockers.find():
 	channel.queue.declare(queue=locker['lockerID'])
-	channe.queue_purge(queue=locker['lockerID'])
+	channel.queue_purge(queue=locker['lockerID'])
 	channel.queue_unbind(queue=locker['lockerID'], 
 				exchange=rabbitExchange, 
 				routing_key=locker['lockerID'])
@@ -56,14 +54,15 @@ def master_callback(ch, method, properties, body):
 	if data['lockerID'] == method.routing_key: # should always be true
 		the_user = users.find( {'lockerID':data['lockerID']} )
 		# Check if user exists with specified lockerID
-		if the_user['username'] == data['username'] and the_user['password'] == data['password']:
+		if data['lockerTag'] in lockers['lockerTag']:
 			channel.basic_publish(exchange='team_13', routing_key=method.routing_key, body='success')
 		else:
 			channel.basic_publish(exchange='team_13', routing_key=method.routing_key, body='failure')
+	channel.stop_consuming()
 
 channel.basic_consume(master_callback, queue="masterQ", no_ack=True)
-for locker in lockers.find():
-
-	channel.basic_consume(master_callback, queue=locker['lockerID'], no_ack=True)
-
 channel.start_consuming()
+
+for locker in lockers.find():
+	channel.basic_consume(master_callback, queue=locker['lockerID'], no_ack=True)
+	channel.start_consuming()
