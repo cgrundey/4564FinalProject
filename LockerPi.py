@@ -47,7 +47,6 @@ def lightPulse(r,g,b):
 
 # __________________________RABBITMQ_SETUP__________________________________
 lockerID = '123'
-auth_key = ''
 rabbitExchange = 'team_13'
 try:
     credentials = pika.PlainCredentials('Apple', 'Pie')
@@ -59,7 +58,6 @@ except:
     sys.exit('Unable to connect to RabbitMQ Server')
 
 # LOOP VARIABLES
-authorized = False
 continue_reading = True
 # RABBIT CALLBACK
 def master_callback(ch, method, properties, body):
