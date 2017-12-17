@@ -46,7 +46,7 @@ def lightPulse(r,g,b):
     BLUE.ChangeDutyCycle(100)
 
 # __________________________RABBITMQ_SETUP__________________________________
-lockerID = ''
+lockerID = '123'
 auth_key = ''
 rabbitExchange = 'team_13'
 try:
@@ -66,9 +66,9 @@ def master_callback(ch, method, properties, body):
     channel.stop_consuming()
 	print("Response: " + str(body))
     if body == "success":
-        authorized = True
+        lightPulse(0,100,0)
     else:
-        authorized = False
+        lightPulse(100,0,0)
 
 MIFAREReader = MFRC522.MFRC522() # RFID sensor
 
@@ -96,13 +96,6 @@ while continue_reading:
             # consume once to get response
             channel.basic_consume(master_callback, queue=lockerID, no_ack=True)
             channel.start_consuming()
-            # Rabbit Callback will modify authorized appropriately
-            # output status to led
-            if authorized: # success
-                lightPulse(0,100,0) # GREEN
-            else: # failure
-                lightPulse(100,0,0) # RED
-            authorized = False
         else:
             print("Authentication error")
             lightPulse(100,0,0) # RED
