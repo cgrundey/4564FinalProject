@@ -48,12 +48,13 @@ def lightPulse(r,g,b):
 # __________________________RABBITMQ_SETUP__________________________________
 lockerID = ''
 auth_key = ''
-rabbitExchange = 'BlacksburgLockers'
+rabbitExchange = 'team_13'
 try:
     credentials = pika.PlainCredentials('Apple', 'Pie')
     parameters = pika.ConnectionParameters(sys.argv[1], virtual_host='team_13_host', credentials=credentials)
     connection = pika.BlockingConnection(parameters)
     channel = connection.channel()
+    channel.exchange_declare(exchange=rabbitExchange, exchange_type="direct")
 except:
     sys.exit('Unable to connect to RabbitMQ Server')
 
@@ -64,7 +65,7 @@ continue_reading = True
 def master_callback(ch, method, properties, body):
     channel.stop_consuming()
 	print("Response: " + str(body))
-    if body == "valid":
+    if body == "success":
         authorized = True
     else:
         authorized = False
@@ -91,10 +92,10 @@ while continue_reading:
             MIFAREReader.MFRC522_StopCrypto1()
             # send credentials via RabbitMQ here
             # publish to lockerID queue
-            rabbitMessage = uid + "," + lockerID # Ex: '123456789,123'
-            channel.basic_publish(exchange=rabbitExchange, routing_key=lockerID, body=rabbitMessage)
+            channel.basic_publish(exchange=rabbitExchange, routing_key=lockerID, body=uid)
             # consume once to get response
-            channel.basic_consume(exchange=rabbitExchange, queue=lockerID, no_ack=True)
+            channel.basic_consume(master_callback, queue=lockerID, no_ack=True)
+            channel.start_consuming()
             # Rabbit Callback will modify authorized appropriately
             # output status to led
             if authorized: # success
