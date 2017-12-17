@@ -2,6 +2,7 @@ from flask import make_response, request, Response, abort, Flask, jsonify
 from flask_discoverer import Discoverer, advertise
 from functools import wraps
 from pymongo import *
+from bson.json_util import dumps
 import socket
 import sys
 
@@ -16,7 +17,6 @@ try:
 except:
 	sys.exit("Error connecting to MongoDB")
 # Collections
-users = db.users
 history = db.history
 lockers = db.lockers
 
@@ -55,18 +55,23 @@ def add_tag_locker():
 	print("lock: {} tag: {}".format(lock, tag))
 	return "tag {} has been added to locker {}".format(tag, lock)
 	#add tag to user here
-	#users.insert_one({'user' : usr, 'tag' : tag})
-
+	lockers.find({'lockerID' : lock})['lockerTag'].append(tag)
+	return "tag {} has been added to locker {}".format(tag, lock)
+	
 @app.route("/remove_tag_locker", methods =['DELETE'])
 @requires_auth
 def remove_tag_locker():
 	lock = request.get_json()['locker']
 	tag = request.get_json()['tag']
 	print("lock: {} tag: {}".format(lock, tag))
+	lockers.find({'lockerID' : lock})['lockerTag'].remove(tag)
 	return "tag {} has been deleted from locker {}".format(tag, lock)
-	#remove tag from user here
-	#users.delete_one({'user' : usr, 'tag' : tag})
 
+@app.route("/add_tag_locker", methods =['GET'])
+@requires_auth
+def get_history():
+    return dumps(history)
+	
 if __name__ == "__main__":
 	s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 	s.connect(("8.8.8.8", 80))
