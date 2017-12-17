@@ -8,7 +8,7 @@ from flask_discoverer import Discoverer, advertise
 # MongoDB initialization
 try:
 	client = MongoClient('localhost', 27017)
-	db = client.BlacksburgLockers
+	db = client.team_13
 except:
 	sys.exit("Error connecting to MongoDB")
 # Collections
@@ -48,16 +48,12 @@ for locker in lockers.find():
 				queue="masterQ",
 				routing_key=locker['lockerID'])
 
-# message = json.dumps(data)
 def master_callback(ch, method, properties, body):
-	data = json.loads(body)
-	if data['lockerID'] == method.routing_key: # should always be true
-		the_user = users.find( {'lockerID':data['lockerID']} )
-		# Check if user exists with specified lockerID
-		if data['lockerTag'] in lockers['lockerTag']:
-			channel.basic_publish(exchange='team_13', routing_key=method.routing_key, body='success')
-		else:
-			channel.basic_publish(exchange='team_13', routing_key=method.routing_key, body='failure')
+	# Check if user exists with specified lockerID
+	if body in lockers['lockerTag']:
+		channel.basic_publish(exchange='team_13', routing_key=method.routing_key, body='success')
+	else:
+		channel.basic_publish(exchange='team_13', routing_key=method.routing_key, body='failure')
 	channel.stop_consuming()
 
 channel.basic_consume(master_callback, queue="masterQ", no_ack=True)

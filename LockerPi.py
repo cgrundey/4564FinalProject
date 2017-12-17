@@ -46,28 +46,27 @@ def lightPulse(r,g,b):
     BLUE.ChangeDutyCycle(100)
 
 # __________________________RABBITMQ_SETUP__________________________________
-lockerID = ''
-auth_key = ''
-rabbitExchange = 'BlacksburgLockers'
+lockerID = '123'
+rabbitExchange = 'team_13'
 try:
     credentials = pika.PlainCredentials('Apple', 'Pie')
     parameters = pika.ConnectionParameters(sys.argv[1], virtual_host='team_13_host', credentials=credentials)
     connection = pika.BlockingConnection(parameters)
     channel = connection.channel()
+    channel.exchange_declare(exchange=rabbitExchange, exchange_type="direct")
 except:
     sys.exit('Unable to connect to RabbitMQ Server')
 
 # LOOP VARIABLES
-authorized = False
 continue_reading = True
 # RABBIT CALLBACK
 def master_callback(ch, method, properties, body):
     channel.stop_consuming()
-	print("Response: " + str(body))
-    if body == "valid":
-        authorized = True
+    print("Response: " + str(body))
+    if body == "success":
+        lightPulse(0,100,0)
     else:
-        authorized = False
+        lightPulse(100,0,0)
 
 MIFAREReader = MFRC522.MFRC522() # RFID sensor
 
@@ -91,17 +90,12 @@ while continue_reading:
             MIFAREReader.MFRC522_StopCrypto1()
             # send credentials via RabbitMQ here
             # publish to lockerID queue
-            rabbitMessage = uid + "," + lockerID # Ex: '123456789,123'
-            channel.basic_publish(exchange=rabbitExchange, routing_key=lockerID, body=rabbitMessage)
+            channel.basic_publish(exchange=rabbitExchange, routing_key=lockerID, body=uid)
             # consume once to get response
-            channel.basic_consume(exchange=rabbitExchange, queue=lockerID, no_ack=True)
-            # Rabbit Callback will modify authorized appropriately
-            # output status to led
-            if authorized: # success
-                lightPulse(0,100,0) # GREEN
-            else: # failure
-                lightPulse(100,0,0) # RED
-            authorized = False
+            while res.method.message_count == 0: # wait for a message to consume
+                sleep(0.01)
+            channel.basic_consume(master_callback, queue=lockerID, no_ack=True)
+            channel.start_consuming()
         else:
             print("Authentication error")
             lightPulse(100,0,0) # RED
