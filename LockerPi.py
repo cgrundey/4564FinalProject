@@ -79,23 +79,11 @@ while continue_reading:
     if status == MIFAREReader.MI_OK:
         uid = str(uid[0])+str(uid[1])+str(uid[2])+str(uid[3])
         print("Authorizing UID: " + uid + " ...")
-        # This is the default key for authentication
-        key = [0xFF,0xFF,0xFF,0xFF,0xFF,0xFF]
-        MIFAREReader.MFRC522_SelectTag(uid)
-        # Authenticate
-        status = MIFAREReader.MFRC522_Auth(MIFAREReader.PICC_AUTHENT1A, 8, key, uid)
-        # Check if authenticated
-        if status == MIFAREReader.MI_OK:
-            MIFAREReader.MFRC522_Read(8)
-            MIFAREReader.MFRC522_StopCrypto1()
-            # send credentials via RabbitMQ here
-            # publish to lockerID queue
-            channel.basic_publish(exchange=rabbitExchange, routing_key=lockerID, body=uid)
-            # consume once to get response
-            while res.method.message_count == 0: # wait for a message to consume
-                sleep(0.01)
-            channel.basic_consume(master_callback, queue=lockerID, no_ack=True)
-            channel.start_consuming()
-        else:
-            print("Authentication error")
-            lightPulse(100,0,0) # RED
+        # send credentials via RabbitMQ here
+        # publish to lockerID queue
+        channel.basic_publish(exchange=rabbitExchange, routing_key=lockerID, body=uid)
+        # consume once to get response
+        while res.method.message_count == 0: # wait for a message to consume
+            sleep(0.01)
+        channel.basic_consume(master_callback, queue=lockerID, no_ack=True)
+        channel.start_consuming()
