@@ -57,16 +57,13 @@ def master_callback(ch, method, properties, body):
 		the_user = users.find( {'lockerID':data['lockerID']} )
 		# Check if user exists with specified lockerID
 		if the_user['username'] == data['username'] and the_user['password'] == data['password']:
-			# publish success back to rabbitExchange with method.routing_key
+			channel.basic_publish(exchange='team_13', routing_key=method.routing_key, body='success')
 		else:
-			# publish failure back to rabbitExchange with method.routing_key
-
-for locker in lockers.find():
-	def (ch)
+			channel.basic_publish(exchange='team_13', routing_key=method.routing_key, body='failure')
 
 channel.basic_consume(master_callback, queue="masterQ", no_ack=True)
 for locker in lockers.find():
-	
-	channel.basic_consume(, queue=locker['lockerID'], no_ack=True)
+
+	channel.basic_consume(master_callback, queue=locker['lockerID'], no_ack=True)
 
 channel.start_consuming()
