@@ -62,7 +62,7 @@ continue_reading = True
 # RABBIT CALLBACK
 def master_callback(ch, method, properties, body):
     channel.stop_consuming()
-	print("Response: " + str(body))
+    print("Response: " + str(body))
     if body == "success":
         lightPulse(0,100,0)
     else:
@@ -92,6 +92,8 @@ while continue_reading:
             # publish to lockerID queue
             channel.basic_publish(exchange=rabbitExchange, routing_key=lockerID, body=uid)
             # consume once to get response
+            while res.method.message_count == 0: # wait for a message to consume
+                sleep(0.01)
             channel.basic_consume(master_callback, queue=lockerID, no_ack=True)
             channel.start_consuming()
         else:
