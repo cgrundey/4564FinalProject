@@ -8,7 +8,7 @@ from flask_discoverer import Discoverer, advertise
 # MongoDB initialization
 try:
 	client = MongoClient('localhost', 27017)
-	db = client.BlacksburgLockers
+	db = client.team_13
 except:
 	sys.exit("Error connecting to MongoDB")
 # Collections
