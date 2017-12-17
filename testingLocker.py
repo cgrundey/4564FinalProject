@@ -23,7 +23,16 @@ BLUE = GPIO.PWM(blue, Freq)
 
 RED.start(0)
 GREEN.start(0)
-BLUE.start(0)
+BLUE.start(100)
+
+def lightPulse(r,g,b):
+    RED.ChangeDutyCycle(r)
+    GREEN.ChangeDutyCycle(g)
+    BLUE.ChangeDutyCycle(b)
+    sleep(2.5)
+    RED.ChangeDutyCycle(0)
+    GREEN.ChangeDutyCycle(0)
+    BLUE.ChangeDutyCycle(100)
 
 authorized = True
 
@@ -31,10 +40,9 @@ continue_reading = True
 
 def end_read(signal,frame):
     global continue_reading
-    print("Ending...")
+    print("/nEnding...")
     continue_reading = False
     GPIO.cleanup()
-
 signal.signal(signal.SIGINT, end_read)
 
 MIFAREReader = MFRC522.MFRC522()
@@ -48,26 +56,7 @@ while continue_reading:
         uid = str(uid[0])+str(uid[1])+str(uid[2])+str(uid[3])
         print("Authorizing UID: " + uid + " ...")
         # output status to led
-        if uid == '126227175133':
-            # success
-            RED.ChangeDutyCycle(0)
-            GREEN.ChangeDutyCycle(100)
-            BLUE.ChangeDutyCycle(0)
-        else:
-            # failure
-            RED.ChangeDutyCycle(100)
-            GREEN.ChangeDutyCycle(0)
-            BLUE.ChangeDutyCycle(0)
-        sleep(2.5)
-        RED.ChangeDutyCycle(0)
-        GREEN.ChangeDutyCycle(0)
-        BLUE.ChangeDutyCycle(0)
-#    else:
-#        print("Authentication error")
-#        RED.ChangeDutyCycle(100)
-#        GREEN.ChangeDutyCycle(0)
-#        BLUE.ChangeDutyCycle(0)
-#        sleep(2.5)
-#        RED.ChangeDutyCycle(0)
-#        GREEN.ChangeDutyCycle(0)
-#        BLUE.ChangeDutyCycle(0)
+        if uid == '126227175133': # success
+            lightPulse(0,100,0)
+        else:                     # failure
+            lightPulse(100,0,0)

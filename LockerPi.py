@@ -2,10 +2,20 @@
 
 import RPi.GPIO as GPIO
 from time import sleep
-import MFRC522
-import signal
-import pika
+import MFRC522 # RFID library
+import signal  # EOF signal
+import pika    # RabbitMQ library
+import sys
 
+# EOF
+def end_read(signal,frame):
+    global continue_reading
+    print("Ending...")
+    continue_reading = False
+    GPIO.cleanup()
+signal.signal(signal.SIGINT, end_read)
+
+# __________________________GPIO_SETUP__________________________________
 GPIO.setmode(GPIO.BOARD)
 GPIO.setwarnings(False)
 
@@ -24,22 +34,33 @@ BLUE = GPIO.PWM(blue, Freq)
 
 RED.start(0)
 GREEN.start(0)
-BLUE.start(0)
+BLUE.start(100)
 
-"get this from RFID sensor"
+def lightPulse(r,g,b):
+    RED.ChangeDutyCycle(r)
+    GREEN.ChangeDutyCycle(g)
+    BLUE.ChangeDutyCycle(b)
+    sleep(2.5)
+    RED.ChangeDutyCycle(0)
+    GREEN.ChangeDutyCycle(0)
+    BLUE.ChangeDutyCycle(100)
+
+# __________________________RABBITMQ_SETUP__________________________________
 lockerID = ''
 auth_key = ''
 rabbitExchange = 'BlacksburgLockers'
+try:
+    credentials = pika.PlainCredentials('Apple', 'Pie')
+    parameters = pika.ConnectionParameters(sys.argv[1], virtual_host='team_13_host', credentials=credentials)
+    connection = pika.BlockingConnection(parameters)
+    channel = connection.channel()
+except:
+    sys.exit('Unable to connect to RabbitMQ Server')
 
-credentials = pika.PlainCredentials('Apple', 'Pie')
-parameters = pika.ConnectionParameters(sys.argv[1], virtual_host='team_13_host', credentials=credentials)
-connection = pika.BlockingConnection(parameters)
-channel = connection.channel()
-
+# LOOP VARIABLES
 authorized = False
-
 continue_reading = True
-
+# RABBIT CALLBACK
 def master_callback(ch, method, properties, body):
     channel.stop_consuming()
 	print("Response: " + str(body))
@@ -48,16 +69,9 @@ def master_callback(ch, method, properties, body):
     else:
         authorized = False
 
-def end_read(signal,frame):
-    global continue_reading
-    print("Ending...")
-    continue_reading = False
-    GPIO.cleanup()
+MIFAREReader = MFRC522.MFRC522() # RFID sensor
 
-signal.signal(signal.SIGINT, end_read)
-
-MIFAREReader = MFRC522.MFRC522()
-
+# __________________________MAIN_LOOP__________________________________
 while continue_reading:
     (status,TagType) = MIFAREReader.MFRC522_Request(MIFAREReader.PICC_REQIDL)
     if status == MIFAREReader.MI_OK:
@@ -77,32 +91,17 @@ while continue_reading:
             MIFAREReader.MFRC522_StopCrypto1()
             # send credentials via RabbitMQ here
             # publish to lockerID queue
-            channel.basic_publish(exchange=rabbitExchange, routing_key=lockerID, body=uid + "," + lockerID)
-            # consume once
+            rabbitMessage = uid + "," + lockerID # Ex: '123456789,123'
+            channel.basic_publish(exchange=rabbitExchange, routing_key=lockerID, body=rabbitMessage)
+            # consume once to get response
             channel.basic_consume(exchange=rabbitExchange, queue=lockerID, no_ack=True)
-
+            # Rabbit Callback will modify authorized appropriately
             # output status to led
-            if authorized:
-                # success
-                RED.ChangeDutyCycle(0)
-                GREEN.ChangeDutyCycle(100)
-                BLUE.ChangeDutyCycle(0)
-            else:
-                # failure
-                RED.ChangeDutyCycle(100)
-                GREEN.ChangeDutyCycle(0)
-                BLUE.ChangeDutyCycle(0)
-            sleep(2.5)
-            RED.ChangeDutyCycle(0)
-            GREEN.ChangeDutyCycle(0)
-            BLUE.ChangeDutyCycle(0)
+            if authorized: # success
+                lightPulse(0,100,0) # GREEN
+            else: # failure
+                lightPulse(100,0,0) # RED
             authorized = False
         else:
             print("Authentication error")
-            RED.ChangeDutyCycle(100)
-            GREEN.ChangeDutyCycle(0)
-            BLUE.ChangeDutyCycle(0)
-            sleep(2.5)
-            RED.ChangeDutyCycle(0)
-            GREEN.ChangeDutyCycle(0)
-            BLUE.Chan
+            lightPulse(100,0,0) # RED
