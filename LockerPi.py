@@ -54,6 +54,7 @@ try:
     connection = pika.BlockingConnection(parameters)
     channel = connection.channel()
     channel.exchange_declare(exchange=rabbitExchange, exchange_type="direct")
+    print("Connected to RabbigMQ!")
 except:
     sys.exit('Unable to connect to RabbitMQ Server')
 
@@ -82,13 +83,7 @@ while continue_reading:
         # send credentials via RabbitMQ here
         # publish to lockerID queue
         channel.basic_publish(exchange=rabbitExchange, routing_key=lockerID, body=uid)
-        res = channel.queue_declare(
-						queue=lockerID,
-						durable=True,
-						exclusive=False,
-						auto_delete=False,
-						passive=True
-    					)
+        res = channel.queue_declare(queue=lockerID, durable=True, exclusive=False, auto_delete=False, passive=True)
         # consume once to get response
         while res.method.message_count == 0: # wait for a message to consume
             sleep(0.01)
