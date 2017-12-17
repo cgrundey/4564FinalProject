@@ -21,9 +21,11 @@ RED = GPIO.PWM(red, Freq)
 GREEN = GPIO.PWM(green, Freq)
 BLUE = GPIO.PWM(blue, Freq)
 
+blueinc = -1
+blueval = 100
 RED.start(0)
 GREEN.start(0)
-BLUE.start(100)
+BLUE.start(blueval)
 
 def lightPulse(r,g,b):
     RED.ChangeDutyCycle(r)
@@ -32,7 +34,7 @@ def lightPulse(r,g,b):
     sleep(2.5)
     RED.ChangeDutyCycle(0)
     GREEN.ChangeDutyCycle(0)
-    BLUE.ChangeDutyCycle(100)
+    BLUE.ChangeDutyCycle(blueval)
 
 authorized = True
 
@@ -51,6 +53,12 @@ while continue_reading:
     (status,TagType) = MIFAREReader.MFRC522_Request(MIFAREReader.PICC_REQIDL)
     if status == MIFAREReader.MI_OK:
         print("Got it,")
+    else:
+        if blueval == 100:
+            blueinc = -1
+        elif bluevall == 20:
+            blueinc = 1
+        blueval += blueinc
     (status,uid) = MIFAREReader.MFRC522_Anticoll()
     if status == MIFAREReader.MI_OK:
         uid = str(uid[0])+str(uid[1])+str(uid[2])+str(uid[3])
