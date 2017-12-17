@@ -1,11 +1,24 @@
 from flask import make_response, request, Response, abort, Flask, jsonify
 from flask_discoverer import Discoverer, advertise
 from functools import wraps
+from pymongo import *
 import socket
+import sys
 
 #flask initialization
 app = Flask(__name__)
 discoverer = Discoverer(app)
+
+# MongoDB initialization
+try:
+	client = MongoClient('localhost', 27017)
+	db = client.BlacksburgLockers
+except:
+	sys.exit("Error connecting to MongoDB")
+# Collections
+users = db.users
+history = db.history
+lockers = db.lockers
 
 '''
 ------------------------------Flask section-------------------------------------
@@ -34,41 +47,25 @@ def requires_auth(f):
 		return f(*args, **kwargs)
 	return decorated
 	
-@app.route("/add_tag_user", methods =['POST'])
+@app.route("/add_tag_locker", methods =['POST'])
 @requires_auth
-def add_tag_user():
-	usr = request.get_json()['user']
+def add_tag_locker():
+	lock = request.get_json()['locker']
 	tag = request.get_json()['tag']
-	print("usr: {} tag: {}".format(usr, tag))
-	return "tag {} has been added to user {}".format(usr, tag)
+	print("lock: {} tag: {}".format(lock, tag))
+	return "tag {} has been added to locker {}".format(tag, lock)
 	#add tag to user here
+	#users.insert_one({'user' : usr, 'tag' : tag})
 
-@app.route("/remove_tag_user", methods =['DELETE'])
+@app.route("/remove_tag_locker", methods =['DELETE'])
 @requires_auth
-def remove_tag_user():
-	usr = request.get_json()['user']
+def remove_tag_locker():
+	lock = request.get_json()['locker']
 	tag = request.get_json()['tag']
-	print("usr: {} tag: {}".format(usr, tag))
-	return "tag {} has been deleted from user {}".format(usr, tag)
+	print("lock: {} tag: {}".format(lock, tag))
+	return "tag {} has been deleted from locker {}".format(tag, lock)
 	#remove tag from user here
-	
-@app.route("/add_locker_user", methods =['POST'])
-@requires_auth
-def add_locker_user():
-	usr = request.get_json()['user']
-	lock = request.get_json()['locker']
-	print("usr: {} locker: {}".format(usr, lock))
-	return "locker {} has been added to user {}".format(usr, lock)
-	#add locker to user here
-
-@app.route("/remove_locker_user", methods =['DELETE'])
-@requires_auth
-def remove_locker_user():
-	usr = request.get_json()['user']
-	lock = request.get_json()['locker']
-	print("usr: {} locker: {}".format(usr, lock))
-	return "locker {} has been deleted from user {}".format(usr, lock)
-	#remove locker from user here
+	#users.delete_one({'user' : usr, 'tag' : tag})
 
 if __name__ == "__main__":
 	s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
