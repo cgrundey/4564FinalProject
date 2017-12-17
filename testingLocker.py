@@ -56,7 +56,7 @@ while continue_reading:
     else:
         if blueval == 100:
             blueinc = -1
-        elif bluevall == 20:
+        elif blueval == 20:
             blueinc = 1
         blueval += blueinc
     (status,uid) = MIFAREReader.MFRC522_Anticoll()
