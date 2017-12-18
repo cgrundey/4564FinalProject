@@ -46,7 +46,7 @@ def lightPulse(r,g,b):
     BLUE.ChangeDutyCycle(40)
 
 # __________________________RABBITMQ_SETUP__________________________________
-lockerID = '123'
+lockerID = 'lock1'
 rabbitExchange = 'team_13'
 try:
     credentials = pika.PlainCredentials('Apple', 'Pie')
@@ -54,7 +54,7 @@ try:
     connection = pika.BlockingConnection(parameters)
     channel = connection.channel()
     channel.exchange_declare(exchange=rabbitExchange, exchange_type="direct")
-    print("Connected to RabbitMQ!")
+    print("Connected to RabbitMQ!\nLockerID: " + lockerID)
 except:
     sys.exit('Unable to connect to RabbitMQ Server')
 
