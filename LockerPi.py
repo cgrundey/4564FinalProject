@@ -64,11 +64,12 @@ except:
 continue_reading = True
 # RABBIT CALLBACK
 def master_callback(ch, method, properties, body):
-    print("Response: " + str(body))
     if body == 'success':
         lightPulse(0,100,0)
+        print("Authorized!")
     else:
         lightPulse(100,0,0)
+        print("Not authorized.")
     channel.stop_consuming()
 
 MIFAREReader = MFRC522.MFRC522() # RFID sensor
@@ -77,7 +78,7 @@ MIFAREReader = MFRC522.MFRC522() # RFID sensor
 while continue_reading:
     (status,TagType) = MIFAREReader.MFRC522_Request(MIFAREReader.PICC_REQIDL)
     if status == MIFAREReader.MI_OK:
-        print("Got it,")
+        print("Reading card")
     (status,uid) = MIFAREReader.MFRC522_Anticoll()
     if status == MIFAREReader.MI_OK:
         uid = str(uid[0])+str(uid[1])+str(uid[2])+str(uid[3])
