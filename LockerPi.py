@@ -58,6 +58,21 @@ try:
 except:
     sys.exit('Unable to connect to RabbitMQ Server')
 
+    channel.queue_declare(queue=lockerID)
+    channel.queue_purge(queue=lockerID)
+	channel.queue_unbind(queue=lockerID,
+				exchange=rabbitExchange,
+				routing_key=lockerID)
+	channel.queue_bind(exchange=rabbitExchange,
+				queue=lockerID,
+				routing_key=lockerID)
+	channel.queue_unbind(queue="masterQ",
+				exchange=rabbitExchange,
+				routing_key=lockerID)
+	channel.queue_bind(exchange=rabbitExchange,
+				queue="masterQ",
+				routing_key=lockerID)
+
 # LOOP VARIABLES
 continue_reading = True
 # RABBIT CALLBACK
