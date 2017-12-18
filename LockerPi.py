@@ -32,18 +32,18 @@ RED = GPIO.PWM(red, Freq)
 GREEN = GPIO.PWM(green, Freq)
 BLUE = GPIO.PWM(blue, Freq)
 
-RED.start(0)
+RED.start(14)
 GREEN.start(0)
-BLUE.start(100)
+BLUE.start(40)
 
 def lightPulse(r,g,b):
     RED.ChangeDutyCycle(r)
     GREEN.ChangeDutyCycle(g)
     BLUE.ChangeDutyCycle(b)
-    sleep(2.5)
-    RED.ChangeDutyCycle(0)
+    sleep(2)
+    RED.ChangeDutyCycle(14)
     GREEN.ChangeDutyCycle(0)
-    BLUE.ChangeDutyCycle(100)
+    BLUE.ChangeDutyCycle(40)
 
 # __________________________RABBITMQ_SETUP__________________________________
 lockerID = '123'
@@ -54,7 +54,7 @@ try:
     connection = pika.BlockingConnection(parameters)
     channel = connection.channel()
     channel.exchange_declare(exchange=rabbitExchange, exchange_type="direct")
-    print("Connected to RabbigMQ!")
+    print("Connected to RabbitMQ!")
 except:
     sys.exit('Unable to connect to RabbitMQ Server')
 
