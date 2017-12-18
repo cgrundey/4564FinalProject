@@ -58,20 +58,8 @@ try:
 except:
     sys.exit('Unable to connect to RabbitMQ Server')
 
-    channel.queue_declare(queue=lockerID)
-    channel.queue_purge(queue=lockerID)
-	channel.queue_unbind(queue=lockerID,
-				exchange=rabbitExchange,
-				routing_key=lockerID)
-	channel.queue_bind(exchange=rabbitExchange,
-				queue=lockerID,
-				routing_key=lockerID)
-	channel.queue_unbind(queue="masterQ",
-				exchange=rabbitExchange,
-				routing_key=lockerID)
-	channel.queue_bind(exchange=rabbitExchange,
-				queue="masterQ",
-				routing_key=lockerID)
+result = channel.queue_declare(exclusive=True)
+queue_name = result.method.queue
 
 # LOOP VARIABLES
 continue_reading = True
@@ -100,9 +88,10 @@ while continue_reading:
         channel.basic_publish(exchange=rabbitExchange, routing_key=lockerID, body=uid)
         res = channel.queue_declare(queue=lockerID, durable=True, exclusive=False, auto_delete=False, passive=True)
         # consume once to get response
-        while res.method.message_count == 0: # wait for a message to consume
-            res = channel.queue_declare(queue=lockerID, durable=True, exclusive=False, auto_delete=False, passive=True)
-            continue
+        # while res.method.message_count == 0: # wait for a message to consume
+        #     res = channel.queue_declare(queue=lockerID, durable=True, exclusive=False, auto_delete=False, passive=True)
+        #     continue
+        sleep(2)
         channel.basic_consume(master_callback, queue=lockerID, no_ack=True)
         channel.start_consuming()
         print("consumed a message")
