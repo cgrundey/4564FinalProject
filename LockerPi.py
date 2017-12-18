@@ -87,5 +87,7 @@ while continue_reading:
         # consume once to get response
         while res.method.message_count == 0: # wait for a message to consume
             sleep(0.01)
+        print("there is a message to consume")
         channel.basic_consume(master_callback, queue=lockerID, no_ack=True)
         channel.start_consuming()
+        print("consumed a message")
