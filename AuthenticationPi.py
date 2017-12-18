@@ -33,41 +33,57 @@ channel.queue_declare(queue="masterQ")
 channel.queue_purge(queue="masterQ")
 # Create queue for each locker to post
 for locker in lockers.find():
-	channel.queue_declare(queue=locker['lockerID'])
-	channel.queue_purge(queue=locker['lockerID'])
-	channel.queue_unbind(queue=locker['lockerID'], 
+	channel.queue_declare(queue=locker['lockerID'] + "rcvAuth")
+	channel.queue_purge(queue=locker['lockerID'] + "rcvAuth")
+	channel.queue_unbind(queue=locker['lockerID'] + "rcvAuth",
 				exchange=rabbitExchange, 
-				routing_key=locker['lockerID'])
+				routing_key=locker['lockerID'] + "rcvAuth")
 	channel.queue_bind(exchange=rabbitExchange, 
-				queue=locker['lockerID'], 
-				routing_key=locker['lockerID'])
+				queue=locker['lockerID'] + "rcvAuth",
+				routing_key=locker['lockerID'] + "rcvAuth")
 	channel.queue_unbind(queue="masterQ", 
 				exchange=rabbitExchange, 
-				routing_key=locker['lockerID'])
+				routing_key=locker['lockerID'] + "rcvAuth")
 	channel.queue_bind(exchange=rabbitExchange,
 				queue="masterQ",
-				routing_key=locker['lockerID'])
+				routing_key=locker['lockerID'] + "rcvAuth")
+
+for locker in lockers.find():
+	channel.queue_declare(queue=locker['lockerID'] + "rcvVal")
+	channel.queue_purge(queue=locker['lockerID'] + "rcvVal")
+	channel.queue_unbind(queue=locker['lockerID'] + "rcvVal",
+				exchange=rabbitExchange,
+				routing_key=locker['lockerID'] + "rcvVal")
+	channel.queue_bind(exchange=rabbitExchange,
+				queue=locker['lockerID'] + "rcvVal",
+				routing_key=locker['lockerID'] + "rcvVal")
+	channel.queue_unbind(queue="masterQ",
+				exchange=rabbitExchange,
+				routing_key=locker['lockerID'] + "rcvVal")
+	channel.queue_bind(exchange=rabbitExchange,
+				queue="masterQ",
+				routing_key=locker['lockerID'] + "rcvVal")
 
 def master_callback(ch, method, properties, body):
 	# Check if user exists with specified lockerID
-	doc = db.lockers.find_one({"lockerID": str(method.routing_key)})
-	print ("body: " + str(body))
-	print ("routing key " + str(method.routing_key))
-	pprint(doc)
+	doc = db.lockers.find_one({"lockerID": str(method.routing_key)[:-7]})
+	print ("body: " + str(body)[2:-1])
+	print ("routing key " + str(method.routing_key)[:-7])
 	
 	if str(body)[2:-1] in doc['lockerTags']:
-		channel.basic_publish(exchange='team_13', routing_key=method.routing_key, body='success')
+		channel.basic_publish(exchange='team_13', routing_key=str(method.routing_key)[:-7] + "rcvVal", body='success')
 		history.insert_one({"Locker" : str(method.routing_key), "Tag" : str(body), "Result" : 'success'})
 		print('success')
 	else:
-		channel.basic_publish(exchange='team_13', routing_key=method.routing_key, body='failure')
+		channel.basic_publish(exchange='team_13', routing_key=str(method.routing_key)[:-7]+ "rcvVal", body='failure')
 		history.insert_one({"Locker" : str(method.routing_key), "Tag" : str(body), "Result" : 'failure'})
 		print('failure')
 	channel.stop_consuming()
-
-channel.basic_consume(master_callback, queue="masterQ", no_ack=True)
-channel.start_consuming()
-
-for locker in lockers.find():
-	channel.basic_consume(master_callback, queue=locker['lockerID'], no_ack=True)
+while True:
+	channel.basic_consume(master_callback, queue="masterQ", no_ack=True)
 	channel.start_consuming()
+
+	#for locker in lockers.find():
+		#channel.basic_consume(master_callback, queue=locker['lockerID']+ "rcvAuth", no_ack=True)
+		#channel.start_consuming()
+		#print("whoohoo")
