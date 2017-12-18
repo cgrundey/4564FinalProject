@@ -51,8 +51,10 @@ def master_callback(ch, method, properties, body):
 	# Check if user exists with specified lockerID
 	if body in lockers['lockerTag']:
 		channel.basic_publish(exchange='team_13', routing_key=method.routing_key, body='success')
+		history.insert_one({"Locker" : method.routing_key, "Tag" : body, "Result" : 'success'})
 	else:
 		channel.basic_publish(exchange='team_13', routing_key=method.routing_key, body='failure')
+		history.insert_one({"Locker" : method.routing_key, "Tag" : body, "Result" : 'failure'})
 	channel.stop_consuming()
 
 channel.basic_consume(master_callback, queue="masterQ", no_ack=True)
