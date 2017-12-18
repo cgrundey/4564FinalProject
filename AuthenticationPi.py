@@ -70,11 +70,11 @@ def master_callback(ch, method, properties, body):
 	
 	if str(body)[2:-1] in doc['lockerTags']:
 		channel.basic_publish(exchange='team_13', routing_key=str(method.routing_key)[:-7] + "rcvVal", body='success')
-		history.insert_one({"Locker" : str(method.routing_key), "Tag" : str(body), "Result" : 'success'})
+		history.insert_one({"Locker" : str(method.routing_key)[:-7], "Tag" : str(body), "Result" : 'success'})
 		print('success')
 	else:
 		channel.basic_publish(exchange='team_13', routing_key=str(method.routing_key)[:-7]+ "rcvVal", body='failure')
-		history.insert_one({"Locker" : str(method.routing_key), "Tag" : str(body), "Result" : 'failure'})
+		history.insert_one({"Locker" : str(method.routing_key)[:-7], "Tag" : str(body), "Result" : 'failure'})
 		print('failure')
 	channel.stop_consuming()
 while True:

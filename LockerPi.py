@@ -46,7 +46,7 @@ def lightPulse(r,g,b):
     BLUE.ChangeDutyCycle(40)
 
 # __________________________RABBITMQ_SETUP__________________________________
-lockerID = 'lock1'
+lockerID = 'lock2'
 rabbitExchange = 'team_13'
 try:
     credentials = pika.PlainCredentials('Apple', 'Pie')
@@ -86,6 +86,6 @@ while continue_reading:
         # send credentials via RabbitMQ here
         # publish to lockerID queue
         channel.basic_publish(exchange=rabbitExchange, routing_key=lockerID+"rcvAuth", body=uid)
-        res = channel.queue_declare(queue=lockerID, durable=True, exclusive=False, auto_delete=False, passive=True)
+        #res = channel.queue_declare(queue=lockerID, durable=True, exclusive=False, auto_delete=False, passive=True)
         channel.basic_consume(master_callback, queue=lockerID+"rcvVal", no_ack=True)
         channel.start_consuming()
