@@ -2,14 +2,6 @@ import sys
 from pymongo import *
 import pika
 import json
-from functools import wraps
-from bson.json_until import dumps
-import socket
-from flask import make_response, request, Response, abort, Flask, jsonify
-from flask_discoverer import Discoverer, advertise
-
-#flask initialization
-app = Flask(__name__)
 
 # MongoDB initialization
 try:
@@ -69,64 +61,3 @@ channel.start_consuming()
 for locker in lockers.find():
 	channel.basic_consume(master_callback, queue=locker['lockerID'], no_ack=True)
 	channel.start_consuming()
-    
-    
-'''
-------------------------------Flask section-------------------------------------
-'''
-
-def check_auth(username, password):
-	"""
-	This function is called to check if a username /
-	password combination is valid.
-	"""
-	return True if username == "Apple" and password == "Pie" else False
-	
-def authenticate():
-	"""Sends a 401 response that enables basic auth"""
-	return Response(
-	'Could not verify your access level for that URL.\n'
-	'You have to login with proper credentials', 401,
-	{'WWW-Authenticate': 'Basic realm="Login Required"'})
-
-def requires_auth(f):
-	@wraps(f)
-	def decorated(*args, **kwargs):
-		auth = request.authorization
-		if not auth or not check_auth(auth.username, auth.password):
-			return authenticate()
-		return f(*args, **kwargs)
-	return decorated
-	
-@app.route("/add_tag_locker", methods =['POST'])
-@requires_auth
-def add_tag_locker():
-	lockerID = request.get_json()['locker']
-	tag = request.get_json()['tag']
-	print("lock: {} tag: {}".format(lockerID, tag))
-	#add tag to user here
-	 if db.lockers.find({"LockerID": lockerID}).count() > 0:
-        db.lockers.update({"LockerID": lockerID}, {"$push": {"tags": tag}})
-	return "tag {} has been added to locker {}".format(tag, lockerID)
-	
-@app.route("/remove_tag_locker", methods =['DELETE'])
-@requires_auth
-def remove_tag_locker():
-	lockerID = request.get_json()['locker']
-	tag = request.get_json()['tag']
-	print("lock: {} tag: {}".format(lockerID, tag))
-	    if db.lockers.find({"LockerID": lockerID}).count() > 0:
-        db.lockers.update({"LockerID": lockerID}, {"$pull": {"tags": tag}})
-	return "tag {} has been deleted from locker {}".format(tag, lockerID)
-
-@app.route("/add_tag_locker", methods =['GET'])
-@requires_auth
-def get_history():
-    return dumps(history)
-	
-if __name__ == "__main__":
-	s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-	s.connect(("8.8.8.8", 80))
-	ip = s.getsockname()[0]
-	s.close()
-	app.run(host = str(ip), port=5000, debug=True) #IP is based of current pi being used, 5000 is Flask DP
