@@ -1,26 +1,15 @@
 from flask import make_response, request, Response, abort, Flask, jsonify
-from flask_discoverer import Discoverer, advertise
 from functools import wraps
 from pymongo import *
-from bson.json_util import dumps
 import socket
 import sys
+from pprint import pprint
+import json
+from bson import BSON
+from bson import json_util
 
 #flask initialization
 app = Flask(__name__)
-
-# MongoDB initialization
-try:
-	client = MongoClient('localhost', 27017)
-	db = client.BlacksburgLockers
-except:
-	sys.exit("Error connecting to MongoDB")
-# Collections
-history = db.history
-lockers = db.lockers
-'''
-------------------------------Flask section-------------------------------------
-'''
 
 def check_auth(username, password):
 	"""
@@ -50,10 +39,19 @@ def requires_auth(f):
 def add_tag_locker():
 	lockerID = request.get_json()['locker']
 	tag = request.get_json()['tag']
-	print("lock: {} tag: {}".format(lockerID, tag))
+	#print("lock: {} tag: {}".format(lockerID, tag))
 	#add tag to user here
-	if db.lockers.find({"LockerID": lockerID}).count() > 0:
-		db.lockers.update({"LockerID": lockerID}, {"$push": {"tags": tag}})
+	#print(lockers)
+	#pprint(lockers.find_one({}))
+	lockers.update({"lockerID": lockerID}, {"$push": {"lockerTags": tag}})
+	
+	'''
+	if db.lockers.find({"lockerID": str(lockerID)}).count() > 0:
+		print('here')
+		db.lockers.update({"lockerID": lockerID}, {"$push": {"tags": tag}})
+	else:
+		print('here2')
+	'''
 	return "tag {} has been added to locker {}".format(tag, lockerID)
 	
 @app.route("/remove_tag_locker", methods =['DELETE'])
@@ -61,15 +59,26 @@ def add_tag_locker():
 def remove_tag_locker():
 	lockerID = request.get_json()['locker']
 	tag = request.get_json()['tag']
-	print("lock: {} tag: {}".format(lockerID, tag))
-	if db.lockers.find({"LockerID": lockerID}).count() > 0:
-		db.lockers.update({"LockerID": lockerID}, {"$pull": {"tags": tag}})
+	#print("lock: {} tag: {}".format(lockerID, tag))
+	if db.lockers.find({"lockerID": lockerID}).count() > 0:
+		db.lockers.update({"lockerID": lockerID}, {"$pull": {"lockerTags": tag}})
 	return "tag {} has been deleted from locker {}".format(tag, lockerID)
 
 @app.route("/history", methods =['GET'])
 @requires_auth
 def get_history():
-	return dumps(history)
+	return json_util.dumps(history.find({}), sort_keys=True, indent=4, default=json_util.default)
+	
+#add to auth time.asctime( time.localtime(time.time()) )    ?
+# MongoDB initialization
+try:
+	client = MongoClient('localhost', 27017)
+	db = client.team_13
+except:
+	sys.exit("Error connecting to MongoDB")
+# Collections
+history = db.history
+lockers = db.lockers
 	
 if __name__ == "__main__":
 	s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

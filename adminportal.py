@@ -8,13 +8,13 @@ serverip = sys.argv[1] #ip of authenticationpi is command line arg
 ###############################ADD######################################
 
 def add_tag_locker():
-	print("ADD:  Locker: %s\nTag ID: %s" % (e1.get(), e2.get()))
+	#print("ADD:  Locker: %s\nTag ID: %s" % (e1.get(), e2.get()))
 	r = requests.post('http://{}:5000/add_tag_locker'.format(serverip), json = {'locker' : e1.get(), 'tag': e2.get()}, auth=('Apple', 'Pie'))  
 	
 #############################REMOVE#####################################
 
 def remove_tag_locker():
-	print("REMOVE:  User ID: %s\nTag ID: %s" % (e1.get(), e2.get()))
+	#print("REMOVE:  User ID: %s\nTag ID: %s" % (e1.get(), e2.get()))
 	r = requests.delete('http://{}:5000/remove_tag_locker'.format(serverip), json = {'locker' : e1.get(), 'tag': e2.get()}, auth=('Apple', 'Pie'))
 	
 #############################TKINTER####################################
