@@ -67,8 +67,6 @@ for locker in lockers.find():
 def master_callback(ch, method, properties, body):
 	# Check if user exists with specified lockerID
 	doc = db.lockers.find_one({"lockerID": str(method.routing_key)[:-7]})
-	print ("body: " + str(body)[2:-1])
-	print ("routing key " + str(method.routing_key)[:-7])
 	
 	if str(body)[2:-1] in doc['lockerTags']:
 		channel.basic_publish(exchange='team_13', routing_key=str(method.routing_key)[:-7] + "rcvVal", body='success')
@@ -82,8 +80,3 @@ def master_callback(ch, method, properties, body):
 while True:
 	channel.basic_consume(master_callback, queue="masterQ", no_ack=True)
 	channel.start_consuming()
-
-	#for locker in lockers.find():
-		#channel.basic_consume(master_callback, queue=locker['lockerID']+ "rcvAuth", no_ack=True)
-		#channel.start_consuming()
-		#print("whoohoo")

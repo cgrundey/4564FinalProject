@@ -39,10 +39,10 @@ def requires_auth(f):
 def add_tag_locker():
 	lockerID = request.get_json()['locker']
 	tag = request.get_json()['tag']
-	print("lock: {} tag: {}".format(lockerID, tag))
+	#print("lock: {} tag: {}".format(lockerID, tag))
 	#add tag to user here
-	print(lockers)
-	pprint(lockers.find_one({}))
+	#print(lockers)
+	#pprint(lockers.find_one({}))
 	lockers.update({"lockerID": lockerID}, {"$push": {"lockerTags": tag}})
 	
 	'''
@@ -59,7 +59,7 @@ def add_tag_locker():
 def remove_tag_locker():
 	lockerID = request.get_json()['locker']
 	tag = request.get_json()['tag']
-	print("lock: {} tag: {}".format(lockerID, tag))
+	#print("lock: {} tag: {}".format(lockerID, tag))
 	if db.lockers.find({"lockerID": lockerID}).count() > 0:
 		db.lockers.update({"lockerID": lockerID}, {"$pull": {"lockerTags": tag}})
 	return "tag {} has been deleted from locker {}".format(tag, lockerID)
