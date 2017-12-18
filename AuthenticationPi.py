@@ -2,8 +2,6 @@ import sys
 from pymongo import *
 import pika
 import json
-from flask import make_response, request, Response, abort, Flask, jsonify
-from flask_discoverer import Discoverer, advertise
 
 # MongoDB initialization
 try:
@@ -13,6 +11,7 @@ except:
 	sys.exit("Error connecting to MongoDB")
 # Collections
 lockers = db.lockers
+history = db.history
 
 # RabbitMQ initialization
 rabbitUname = 'Apple'
