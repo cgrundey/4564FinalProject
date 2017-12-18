@@ -10,9 +10,9 @@ import sys
 # EOF
 def end_read(signal,frame):
     global continue_reading
-    print("Ending...")
     continue_reading = False
     GPIO.cleanup()
+    sys.exit("\nClosing...")
 signal.signal(signal.SIGINT, end_read)
 
 # __________________________GPIO_SETUP__________________________________
@@ -62,12 +62,12 @@ except:
 continue_reading = True
 # RABBIT CALLBACK
 def master_callback(ch, method, properties, body):
-    channel.stop_consuming()
     print("Response: " + str(body))
-    if body == "success":
+    if body == 'success':
         lightPulse(0,100,0)
     else:
         lightPulse(100,0,0)
+    channel.stop_consuming()
 
 MIFAREReader = MFRC522.MFRC522() # RFID sensor
 
@@ -86,8 +86,10 @@ while continue_reading:
         res = channel.queue_declare(queue=lockerID, durable=True, exclusive=False, auto_delete=False, passive=True)
         # consume once to get response
         while res.method.message_count == 0: # wait for a message to consume
-            sleep(0.01)
-        print("there is a message to consume")
+            res = channel.queue_declare(queue=lockerID, durable=True, exclusive=False, auto_delete=False, passive=True)
+            continue
         channel.basic_consume(master_callback, queue=lockerID, no_ack=True)
         channel.start_consuming()
         print("consumed a message")
+#        channel.basic_consume(master_callback, queue=lockerID, no_ack=True)
+#        channel.start_consuming()
