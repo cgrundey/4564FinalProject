@@ -2,6 +2,7 @@ import sys
 from pymongo import *
 import pika
 import json
+from pprint import pprint
 
 # MongoDB initialization
 try:
@@ -32,7 +33,7 @@ channel.queue_declare(queue="masterQ")
 channel.queue_purge(queue="masterQ")
 # Create queue for each locker to post
 for locker in lockers.find():
-	channel.queue.declare(queue=locker['lockerID'])
+	channel.queue_declare(queue=locker['lockerID'])
 	channel.queue_purge(queue=locker['lockerID'])
 	channel.queue_unbind(queue=locker['lockerID'], 
 				exchange=rabbitExchange, 
@@ -49,12 +50,19 @@ for locker in lockers.find():
 
 def master_callback(ch, method, properties, body):
 	# Check if user exists with specified lockerID
-	if body in lockers['lockerTag']:
+	doc = db.lockers.find_one({"lockerID": str(method.routing_key)})
+	print ("body: " + str(body))
+	print ("routing key " + str(method.routing_key))
+	pprint(doc)
+	
+	if str(body)[2:-1] in doc['lockerTags']:
 		channel.basic_publish(exchange='team_13', routing_key=method.routing_key, body='success')
-		history.insert_one({"Locker" : method.routing_key, "Tag" : body, "Result" : 'success'})
+		history.insert_one({"Locker" : str(method.routing_key), "Tag" : str(body), "Result" : 'success'})
+		print('success')
 	else:
 		channel.basic_publish(exchange='team_13', routing_key=method.routing_key, body='failure')
-		history.insert_one({"Locker" : method.routing_key, "Tag" : body, "Result" : 'failure'})
+		history.insert_one({"Locker" : str(method.routing_key), "Tag" : str(body), "Result" : 'failure'})
+		print('failure')
 	channel.stop_consuming()
 
 channel.basic_consume(master_callback, queue="masterQ", no_ack=True)
