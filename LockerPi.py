@@ -54,24 +54,11 @@ try:
     connection = pika.BlockingConnection(parameters)
     channel = connection.channel()
     channel.exchange_declare(exchange=rabbitExchange, exchange_type="direct")
+    channel.queue_declare(queue=lockerID+"rcvVal")
+    channel.queue_declare(queue=lockerID+"rcvAuth")
     print("Connected to RabbitMQ!\nLockerID: " + lockerID)
 except:
     sys.exit('Unable to connect to RabbitMQ Server')
-
-    channel.queue_declare(queue=lockerID)
-    channel.queue_purge(queue=lockerID)
-	channel.queue_unbind(queue=lockerID,
-				exchange=rabbitExchange,
-				routing_key=lockerID)
-	channel.queue_bind(exchange=rabbitExchange,
-				queue=lockerID,
-				routing_key=lockerID)
-	channel.queue_unbind(queue="masterQ",
-				exchange=rabbitExchange,
-				routing_key=lockerID)
-	channel.queue_bind(exchange=rabbitExchange,
-				queue="masterQ",
-				routing_key=lockerID)
 
 # LOOP VARIABLES
 continue_reading = True
@@ -97,14 +84,7 @@ while continue_reading:
         print("Authorizing UID: " + uid + " ...")
         # send credentials via RabbitMQ here
         # publish to lockerID queue
-        channel.basic_publish(exchange=rabbitExchange, routing_key=lockerID, body=uid)
+        channel.basic_publish(exchange=rabbitExchange, routing_key=lockerID+"rcvAuth", body=uid)
         res = channel.queue_declare(queue=lockerID, durable=True, exclusive=False, auto_delete=False, passive=True)
-        # consume once to get response
-        while res.method.message_count == 0: # wait for a message to consume
-            res = channel.queue_declare(queue=lockerID, durable=True, exclusive=False, auto_delete=False, passive=True)
-            continue
-        channel.basic_consume(master_callback, queue=lockerID, no_ack=True)
+        channel.basic_consume(master_callback, queue=lockerID+"rcvVal", no_ack=True)
         channel.start_consuming()
-        print("consumed a message")
-#        channel.basic_consume(master_callback, queue=lockerID, no_ack=True)
-#        channel.start_consuming()
